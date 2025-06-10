@@ -1,6 +1,6 @@
 from typing import List, Dict
 from sqlalchemy import and_
-
+from sqlalchemy.engine.cursor import CursorResult
 from fastapi import APIRouter
 
 from src.models.user import Users
@@ -54,16 +54,19 @@ async def get_user(id: int) -> User:
 # update a user
 @user_router.put("/{id}")
 def update_user(id: int, user: UserCreateRegister) -> User:
-    old_user = conn.execute(Users.select().where(Users.c.id == id)).fetchone()
-    print("old_user", old_user)
-    result = conn.execute(Users.update().where(Users.c.id == id).values(
-        name=user.name if user.name else old_user.name,
-        email=user.email if user.email else old_user.email,
-        password=user.password if user.password else old_user.password
-    ))
+    old_user = conn.execute(Users.select().where(
+        Users.c.id == id)).fetchone()._asdict()
+
+    result: CursorResult = conn.execute(Users.update().where(
+        Users.c.id == id).values(
+            name=user.name if user.name else old_user.get("name"),
+            email=user.email if user.email else old_user.get("email"),
+            password=user.password if user.password else old_user.get(
+                "password")
+        )
+    )
     conn.commit()
-    print("result", result)
-    return conn.execute(Users.select().where(Users.c.id == id)).fetchone()
+    return result.last_updated_params()
 
 
 # delete a user
