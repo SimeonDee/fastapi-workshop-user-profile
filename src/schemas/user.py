@@ -2,17 +2,21 @@ from pydantic import BaseModel
 
 
 class User(BaseModel):
-    name: str
+    name: str = ""
+    email: str = ""
+
+
+class UserCreateLogin(BaseModel):
     email: str
+    password: str
 
 
 class UserCreateRegister(User):
     password: str
 
 
-class UserCreateLogin(BaseModel):
-    email: str
-    password: str
+class UserUpdate(User):
+    password: str = ""
 
 
 class UserGetLogin(User):
